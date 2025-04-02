@@ -112,25 +112,46 @@ export default function LoginPage() {
     setIsGoogleLoading(true);
     setAuthError(null);
 
-    const { user, error } = await googleSignIn();
+    try {
+      const { user, error } = await googleSignIn();
 
-    if (error) {
-      console.error("Google sign-in error:", error);
+      if (error) {
+        console.error("Google sign-up error:", error);
+        setAuthError(
+          t("signup.errors.googleSignUp") ||
+            "Could not sign up with Google. Please try again."
+        );
+        return;
+      }
+
+      // Ensure we have a valid user object before proceeding
+      if (!user) {
+        console.error("No user returned from Google sign-in");
+        setAuthError(
+          t("signup.errors.googleSignUp") ||
+            "Authentication failed. Please try again."
+        );
+        return;
+      }
+
+      console.log("Google sign-up successful:", user.email);
+
+      // Success - redirect to dashboard
+      toast({
+        title: t("signup.success.title") || "Registration Successful",
+        description:
+          t("signup.success.description") || "Welcome to Plants Doc!",
+      });
+      router.push("/dashboard");
+    } catch (unexpectedError) {
+      console.error("Unexpected error during Google sign-in:", unexpectedError);
       setAuthError(
-        t("login.errors.googleSignIn") ||
-          "Could not sign in with Google. Please try again."
+        t("signup.errors.unexpected") ||
+          "An unexpected error occurred. Please try again."
       );
+    } finally {
       setIsGoogleLoading(false);
-      return;
     }
-
-    // Success - redirect to dashboard
-    toast({
-      title: t("login.success.title") || "Login Successful",
-      description:
-        t("login.success.description") || "Welcome back to Plants Doc!",
-    });
-    router.push("/dashboard");
   };
 
   return (
